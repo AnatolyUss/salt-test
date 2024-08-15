@@ -1,8 +1,6 @@
 import { Schema, model } from 'mongoose';
 
 import { HttpMethod } from '../../../lib/type/http-method.enum';
-// import { IValidationUnit } from '../../../lib/type/validation-unit';
-// import { IModel } from '../../../lib/type/model';
 import { Type } from '../../../lib/type/type.enum';
 import { ValidationUnitDto } from '../../../dto/validation-unit.dto';
 import { ModelDto } from '../../../dto/model.dto';
@@ -24,4 +22,4 @@ const modelSchema = new Schema<ModelDto>({
   body: validationUnitsDefinition,
 });
 
-export const Model = model<ModelDto>('Model', modelSchema);
+export const ModelEntity = model<ModelDto>('Model', modelSchema);

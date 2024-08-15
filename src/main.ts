@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import 'reflect-metadata';
+
 import { getExpressApp } from './lib/app';
 
 (async (): Promise<void> => {

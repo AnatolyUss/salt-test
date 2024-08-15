@@ -1,4 +1,13 @@
-import { ValidateNested, IsDefined, IsEnum, IsString, MinLength, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  ValidateNested,
+  IsDefined,
+  IsEnum,
+  IsString,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 import { HttpMethod } from '../lib/type/http-method.enum';
 import { ValidationUnitDto } from './validation-unit.dto';
@@ -17,12 +26,18 @@ export class ModelDto {
   })
   method: HttpMethod;
 
+  @IsArray({ message: '"query_params" must be an array' })
   @ValidateNested({ message: '"query_params" validation failed' })
+  @Type(() => ValidationUnitDto)
   query_params: ValidationUnitDto[];
 
+  @IsArray({ message: '"headers" must be an array' })
   @ValidateNested({ message: '"headers" validation failed' })
+  @Type(() => ValidationUnitDto)
   headers: ValidationUnitDto[];
 
+  @IsArray({ message: '"body" must be an array' })
   @ValidateNested({ message: '"body" validation failed' })
+  @Type(() => ValidationUnitDto)
   body: ValidationUnitDto[];
 }

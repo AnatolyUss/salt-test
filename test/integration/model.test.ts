@@ -5,14 +5,16 @@ const supertest = require('supertest');
 import { describe, it, expect, beforeAll, afterAll, afterEach } from '@jest/globals';
 
 import { getExpressApp } from '../../src/lib/app';
-import { disconnectRedisClient } from '../../src/storage/redis/data-source';
+import { disconnectRedisClient, getRedisClient } from '../../src/storage/redis/data-source';
 import { dropMongoConnections } from '../../src/storage/mongo/data-source';
-import { Model } from '../../src/storage/mongo/entity/model.entity';
+import { ModelEntity } from '../../src/storage/mongo/entity/model.entity';
 
 describe('model tests', (): void => {
   let server: http.Server;
   let app: Express;
   let redisClient: any;
+  const path = '/orders/update';
+  const method = 'PATCH';
 
   beforeAll(async (): Promise<void> => {
     ({ app, redisClient } = await getExpressApp());
@@ -24,10 +26,112 @@ describe('model tests', (): void => {
     server.close();
   });
 
-  it('', async (): Promise<void> => {
-    const response = await supertest.agent(server).post('/model').send({ a: 1, b: 2 });
+  afterEach(async (): Promise<void> => {
+    const redisClient = await getRedisClient();
+    await Promise.all([
+      redisClient.del(`${path}:${method}`),
+      ModelEntity.deleteOne({ path, method }),
+    ]);
+  });
+
+  it('should save "PATCH /orders/update" successfully', async (): Promise<void> => {
+    const model = {
+      path,
+      method,
+      query_params: [],
+      headers: [
+        {
+          name: 'Authorization',
+          types: ['Auth-Token'],
+          required: true,
+        },
+      ],
+      body: [
+        {
+          name: 'order_id',
+          types: ['Int', 'UUID'],
+          required: true,
+        },
+        {
+          name: 'address',
+          types: ['String'],
+          required: false,
+        },
+        {
+          name: 'order_type',
+          types: ['Int'],
+          required: false,
+        },
+        {
+          name: 'items',
+          types: ['List'],
+          required: false,
+        },
+      ],
+    };
+
+    const response = await supertest.agent(server).post('/model').send(model);
 
     expect(response.status).toBe(201);
-    // expect(response.headers.location).toBe(targetUrl);
+    expect(response.body.data).toBe('Ok');
+  });
+
+  it('should fail to save "PATCH /orders/update" due to malformed input', async (): Promise<void> => {
+    const model = {
+      path,
+      method,
+      query_params: [],
+      headers: [
+        {
+          name: 'Authorization',
+          types: ['Auth-Token'],
+          required: true,
+        },
+      ],
+      body: [
+        {
+          name: 'order_id',
+          types: ['Int', 'uuid'],
+          required: true,
+        },
+        {
+          name: 'address',
+          types: [],
+          required: false,
+        },
+        {
+          name: 'order_type',
+          types: ['Int'],
+        },
+        {
+          name: 'items',
+          types: ['List'],
+          required: false,
+        },
+      ],
+    };
+
+    const response = await supertest.agent(server).post('/model').send(model);
+
+    expect(response.status).toBe(400);
+    expect(response.body.data).toBe('Validation failed');
+
+    const errors = JSON.parse(response.body.error);
+    const errors0 = errors[0].children[0].children[0].constraints;
+    expect(errors0).toStrictEqual({
+      isEnum:
+        '"types" can only be one of following: Int,String,Boolean,List,Date,Email,UUID,Auth-Token',
+    });
+
+    const errors1 = errors[0].children[1].children[0].constraints;
+    expect(errors1).toStrictEqual({
+      arrayNotEmpty: '"types" array must be non empty',
+    });
+
+    const errors2 = errors[0].children[2].children[0].constraints;
+    expect(errors2).toStrictEqual({
+      isDefined: '"required" is missing',
+      isBoolean: '"required" must be a boolean',
+    });
   });
 });

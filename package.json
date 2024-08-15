@@ -1,5 +1,5 @@
 {
-  "name": "salt_test",
+  "name": "salt-test",
   "version": "0.1.0",
   "description": "Salt test",
   "author": "Anatoly Khaytovich <anatolyuss@gmail.com>",
@@ -21,10 +21,11 @@
     "dotenv": "16.4.5",
     "express": "4.19.2",
     "redis": "4.6.15",
+    "mongoose": "8.5.3",
     "reflect-metadata": "0.2.2",
+    "class-validator": "0.14.1",
     "ts-node": "10.9.2",
-    "helmet": "7.1.0",
-    "typeorm": "0.3.20"
+    "helmet": "7.1.0"
   },
   "devDependencies": {
     "@babel/core": "7.24.9",

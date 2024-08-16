@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import 'reflect-metadata';
-
 import * as express from 'express';
 import { Express } from 'express-serve-static-core';
 import * as bodyParser from 'body-parser';
@@ -13,7 +12,9 @@ import { ensureMongoConnection } from '../storage/mongo/data-source';
 import { getRedisClient } from '../storage/redis/data-source';
 import { ResponseDto } from '../dto/response.dto';
 import { ModelDto } from '../dto/model.dto';
+import { RequestDto } from '../dto/request.dto';
 import { ModelService } from '../service/model.service';
+import { RequestService } from '../service/request.service';
 
 export const getExpressApp = async (): Promise<{ app: Express; redisClient: any }> => {
   process
@@ -58,9 +59,33 @@ export const getExpressApp = async (): Promise<{ app: Express; redisClient: any 
   app.post(
     '/request',
     async (request: express.Request, response: express.Response): Promise<void> => {
-      //
-      // The status is 200 instead of 201 as per explicit request at the task definition.
-      response.status(200).json(new ResponseDto('Ok'));
+      try {
+        const requestDto = plainToInstance(RequestDto, request.body);
+        const errors = validateSync(requestDto);
+
+        if (errors.length !== 0) {
+          response.status(400).json(new ResponseDto('Validation failed', JSON.stringify(errors)));
+          return;
+        }
+
+        const modelService = new ModelService();
+        const modelDto = await modelService.getModel(requestDto.path, requestDto.method);
+
+        if (!modelDto) {
+          const msg = `Model not found for path:method "${requestDto.path}:${requestDto.method}"`;
+          response.status(404).json(new ResponseDto(msg));
+          return;
+        }
+
+        const requestService = new RequestService();
+        const validationResponse = requestService.validateRequest(requestDto, modelDto);
+
+        // Return status 200 instead of 201 as per explicit request at the task definition.
+        response.status(200).json(new ResponseDto(validationResponse));
+      } catch (error) {
+        console.error('"POST /request" errors', error);
+        response.status(500).json(new ResponseDto('Error occurred'));
+      }
     },
   );
 

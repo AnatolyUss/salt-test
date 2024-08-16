@@ -10,7 +10,7 @@ import { dropMongoConnections } from '../../src/storage/mongo/data-source';
 import { ModelEntity } from '../../src/storage/mongo/entity/model.entity';
 import { ModelService } from '../../src/service/model.service';
 
-describe('model tests', (): void => {
+describe('model service integration tests', (): void => {
   let server: http.Server;
   let app: Express;
   let redisClient: any;

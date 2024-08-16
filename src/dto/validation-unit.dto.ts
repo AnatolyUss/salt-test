@@ -1,15 +1,4 @@
-import {
-  IsArray,
-  ArrayNotEmpty,
-  IsDefined,
-  IsEnum,
-  IsString,
-  IsBoolean,
-  MinLength,
-  MaxLength,
-} from 'class-validator';
-
-import { Type } from '../lib/type/type.enum';
+import { IsDefined, IsString, MinLength, MaxLength } from 'class-validator';
 
 export class ValidationUnitDto {
   @IsDefined({ message: '"name" is missing' })
@@ -18,16 +7,6 @@ export class ValidationUnitDto {
   @MaxLength(255, { message: '"name" is too long' })
   name: string;
 
-  @IsDefined({ message: '"required" is missing' })
-  @IsBoolean({ message: '"required" must be a boolean' })
-  required: boolean;
-
-  @IsDefined({ message: '"types" is missing' })
-  @IsArray({ message: '"types" must be an array' })
-  @ArrayNotEmpty({ message: '"types" array must be non empty' })
-  @IsEnum(Type, {
-    each: true,
-    message: `"types" can only be one of following: ${Object.values(Type)}`,
-  })
-  types: Type[];
+  @IsDefined({ message: '"value" is missing' })
+  value: any;
 }

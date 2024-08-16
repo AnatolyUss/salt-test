@@ -74,7 +74,7 @@ export class ModelService {
     modeDelete: boolean = false,
     retriesCount: number = 3,
   ): Promise<void> {
-    const key = `${modelDto.path}:${modelDto.method}`;
+    const key = this.getKey(modelDto.path, modelDto.method);
 
     try {
       const redisClient = await getRedisClient();
@@ -97,6 +97,10 @@ export class ModelService {
       await new Promise(resolve => setTimeout(resolve, timeoutMs));
       await this.setModelRedis(modelDto, modeDelete, retriesCount - 1);
     }
+  }
+
+  public getKey(path: string, method: string): string {
+    return `${path}:${method}`;
   }
 
   private serializeModelRedis(modelDto: ModelDto): string {

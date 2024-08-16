@@ -5,14 +5,16 @@ const supertest = require('supertest');
 import { describe, it, expect, beforeAll, afterAll, afterEach } from '@jest/globals';
 
 import { getExpressApp } from '../../src/lib/app';
-import { disconnectRedisClient, getRedisClient } from '../../src/storage/redis/data-source';
+import { disconnectRedisClient } from '../../src/storage/redis/data-source';
 import { dropMongoConnections } from '../../src/storage/mongo/data-source';
 import { ModelEntity } from '../../src/storage/mongo/entity/model.entity';
+import { ModelService } from '../../src/service/model.service';
 
 describe('model tests', (): void => {
   let server: http.Server;
   let app: Express;
   let redisClient: any;
+  const modelService = new ModelService();
   const path = '/orders/update';
   const method = 'PATCH';
 
@@ -27,9 +29,8 @@ describe('model tests', (): void => {
   });
 
   afterEach(async (): Promise<void> => {
-    const redisClient = await getRedisClient();
     await Promise.all([
-      redisClient.del(`${path}:${method}`),
+      redisClient.del(modelService.getKey(path, method)),
       ModelEntity.deleteOne({ path, method }),
     ]);
   });

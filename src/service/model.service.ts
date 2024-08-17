@@ -6,7 +6,7 @@ import { getRedisClient } from '../storage/redis/data-source';
 import { ValidationUnitTemplateDto } from '../dto/validation-unit-template.dto';
 
 export class ModelService {
-  public initializeNamesToUnitsMaps(modelDto: ModelDto): ModelDto {
+  public initializeNamesToUnitsMaps(modelDto: ModelDto): void {
     for (const field in modelDto.groupsToNamesUnitsMap) {
       // 'query_params', 'headers' and 'body'.
       const namesToUnits = modelDto.groupsToNamesUnitsMap[field];
@@ -16,11 +16,9 @@ export class ModelService {
         namesToUnits[template.name] = template;
       });
     }
-
-    return modelDto;
   }
 
-  public initializeRequiredFieldsMap(modelDto: ModelDto): ModelDto {
+  public initializeRequiredFieldsMap(modelDto: ModelDto): void {
     for (const field in modelDto.groupsToRequiredFieldsMap) {
       // 'query_params', 'headers' and 'body'.
       const requiredFields = modelDto.groupsToRequiredFieldsMap[field];
@@ -32,8 +30,6 @@ export class ModelService {
         }
       });
     }
-
-    return modelDto;
   }
 
   public async saveModel(modelDto: ModelDto): Promise<void> {

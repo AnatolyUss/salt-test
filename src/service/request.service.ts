@@ -60,18 +60,12 @@ export class RequestService {
       const template = validationUnitTemplates[unit.name];
 
       if (!template) {
-        validationResponseDto.isAbnormal = true;
         const abnormalityReason: AbnormalityReason = {
           type: AbnormalityType.VALIDATION_TEMPLATE_MISSING,
           description: `Field ${unit.name} missing validation template`,
         };
 
-        // TODO: take it out to a dedicated method.
-        if (unit.name in validationResponseDto.abnormalFields) {
-          validationResponseDto.abnormalFields[unit.name].push(abnormalityReason);
-        } else {
-          validationResponseDto.abnormalFields = { [unit.name]: [abnormalityReason] };
-        }
+        this.setAnomalyDetails(unit.name, validationResponseDto, abnormalityReason);
       }
 
       if (template.required) {
@@ -80,17 +74,30 @@ export class RequestService {
         modelDto.groupsToRequiredFieldsMap[groupName][template.name] = true;
       }
 
-      this.validateType(unit, template.types, groupName, validationResponseDto);
+      this.validateType(unit, template.types, validationResponseDto);
     });
 
     this.addMissingRequiredFields(groupName, modelDto, validationResponseDto);
     return validationResponseDto;
   }
 
+  private setAnomalyDetails(
+    fieldName: string,
+    dto: ValidationResponseDto,
+    reason: AbnormalityReason,
+  ): void {
+    dto.isAbnormal = true;
+
+    if (fieldName in dto.abnormalFields) {
+      dto.abnormalFields[fieldName].push(reason);
+    } else {
+      dto.abnormalFields = { [fieldName]: [reason] };
+    }
+  }
+
   public validateType(
     unit: ValidationUnitDto,
     allowedTypes: Type[],
-    groupName: string,
     validationResponseDto: ValidationResponseDto,
   ): void {
     const isValidValue = allowedTypes.some((type: Type) => this.isValueOfType(type, unit.value));
@@ -99,17 +106,12 @@ export class RequestService {
       return;
     }
 
-    validationResponseDto.isAbnormal = true;
     const abnormalityReason: AbnormalityReason = {
       type: AbnormalityType.TYPE_MISSMATCH,
       description: `Field ${unit.name} must be of type[s] ${Object.values(allowedTypes).join(',')}`,
     };
 
-    if (unit.name in validationResponseDto.abnormalFields) {
-      validationResponseDto.abnormalFields[unit.name].push(abnormalityReason);
-    } else {
-      validationResponseDto.abnormalFields = { [unit.name]: [abnormalityReason] };
-    }
+    this.setAnomalyDetails(unit.name, validationResponseDto, abnormalityReason);
   }
 
   public addMissingRequiredFields(
@@ -119,17 +121,12 @@ export class RequestService {
   ): void {
     for (const field in modelDto.groupsToRequiredFieldsMap[groupName]) {
       if (!modelDto.groupsToRequiredFieldsMap[groupName][field]) {
-        validationResponseDto.isAbnormal = true;
         const abnormalityReason: AbnormalityReason = {
           type: AbnormalityType.REQUIRED_FIELD_MISSING,
           description: `Required field ${field} is missing`,
         };
 
-        if (field in validationResponseDto.abnormalFields) {
-          validationResponseDto.abnormalFields[field].push(abnormalityReason);
-        } else {
-          validationResponseDto.abnormalFields = { [field]: [abnormalityReason] };
-        }
+        this.setAnomalyDetails(field, validationResponseDto, abnormalityReason);
       }
     }
   }

@@ -66,6 +66,7 @@ export class RequestService {
         };
 
         this.setAnomalyDetails(unit.name, validationResponseDto, abnormalityReason);
+        return; // Cannot continue, due to missing validation template.
       }
 
       if (template.required) {
@@ -91,7 +92,7 @@ export class RequestService {
     if (fieldName in dto.abnormalFields) {
       dto.abnormalFields[fieldName].push(reason);
     } else {
-      dto.abnormalFields = { [fieldName]: [reason] };
+      dto.abnormalFields[fieldName] = [reason];
     }
   }
 

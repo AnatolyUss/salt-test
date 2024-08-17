@@ -47,6 +47,98 @@ describe('request service integration tests', (): void => {
     server.close();
   });
 
+  it('should yield abnormalities for endpoint "POST /users/create", due to multiple types of errors/mismatches', async (): Promise<void> => {
+    const request = {
+      path: '/users/create',
+      method: 'POST',
+      query_params: [],
+      headers: [],
+      body: [
+        {
+          name: 'firstName',
+          value: 'John',
+        },
+        {
+          name: 'lastName',
+          value: 777,
+        },
+        {
+          name: 'phone',
+          value: '0555555555',
+        },
+        {
+          name: 'email',
+          value: '@@doe.test',
+        },
+        {
+          name: 'email_2',
+          value: 'abc@mail.test',
+        },
+        {
+          name: 'username',
+          value: 'john_doe',
+        },
+        {
+          name: 'the-password',
+          value: 'test',
+        },
+        {
+          name: 'address',
+          value: 'Test Road',
+        },
+        {
+          name: 'dob',
+          value: '01-21-1980',
+        },
+      ],
+    };
+
+    const response = await supertest.agent(server).post('/request').send(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toStrictEqual({
+      isAbnormal: true,
+      abnormalFields: {
+        'body:lastName': [
+          {
+            type: 'type_missmatch',
+            description: 'Field lastName must be of type[s] String',
+          },
+        ],
+        'body:email': [
+          {
+            type: 'type_missmatch',
+            description: 'Field email must be of type[s] Email',
+          },
+        ],
+        'body:email_2': [
+          {
+            type: 'validation_template_missing',
+            description: 'Field email_2 missing validation template',
+          },
+        ],
+        'body:the-password': [
+          {
+            type: 'validation_template_missing',
+            description: 'Field the-password missing validation template',
+          },
+        ],
+        'body:dob': [
+          {
+            type: 'type_missmatch',
+            description: 'Field dob must be of type[s] Date',
+          },
+        ],
+        'body:password': [
+          {
+            type: 'required_field_missing',
+            description: 'Required field password is missing',
+          },
+        ],
+      },
+    });
+  });
+
   it('should yield no abnormalities for endpoint "GET /users/info"', async (): Promise<void> => {
     const request = {
       path: '/users/info',
@@ -581,6 +673,12 @@ describe('request service integration tests', (): void => {
     expect(response.body.data).toStrictEqual({
       isAbnormal: true,
       abnormalFields: {
+        'body:items': [
+          {
+            type: 'type_missmatch',
+            description: 'Field items must be of type[s] List',
+          },
+        ],
         'body:address': [
           {
             type: 'required_field_missing',
@@ -774,6 +872,62 @@ describe('request service integration tests', (): void => {
           {
             type: 'type_missmatch',
             description: 'Field order_type must be of type[s] Int',
+          },
+        ],
+      },
+    });
+  });
+
+  it('should yield abnormalities for endpoint "PATCH /orders/create", due to address_2 has no validation template', async (): Promise<void> => {
+    const request = {
+      path: '/orders/update',
+      method: 'PATCH',
+      query_params: [],
+      headers: [
+        {
+          name: 'Authorization',
+          value: 'Bearer ebb3cbbe938c4776bd22a4ec2ea8b2ca',
+        },
+      ],
+      body: [
+        {
+          name: 'order_id',
+          value: '46da6390-7c78-4a1c-9efa-7c0396067ce4',
+        },
+        {
+          name: 'address_2',
+          value: 'Very New Test Road',
+        },
+        {
+          name: 'order_type',
+          value: 8,
+        },
+        {
+          name: 'items',
+          value: [
+            {
+              id: 'a3',
+              amount: 3,
+            },
+            {
+              id: 'a5',
+              amount: 4,
+            },
+          ],
+        },
+      ],
+    };
+
+    const response = await supertest.agent(server).post('/request').send(request);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toStrictEqual({
+      isAbnormal: true,
+      abnormalFields: {
+        'body:address_2': [
+          {
+            type: 'validation_template_missing',
+            description: 'Field address_2 missing validation template',
           },
         ],
       },

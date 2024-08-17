@@ -1,7 +1,4 @@
-import { connect /*, createConnection*/, disconnect } from 'mongoose';
-
-// import { IModel } from '../../lib/model';
-// import { ModelSchema } from './entity/model.entity';
+import { connect, disconnect } from 'mongoose';
 
 let isInitialized: boolean;
 

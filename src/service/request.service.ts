@@ -9,8 +9,6 @@ import { AbnormalityType } from '../lib/type/abnormality-type.enum';
 
 export class RequestService {
   public validateRequest(requestDto: RequestDto, modelDto: ModelDto): ValidationResponseDto {
-    // Iterate over following arrays 'query_params', 'headers' and 'body' to determine anomalies.
-    // TODO: theoretically, iterations of "array.reduce" below should be parallelized.
     return Object.keys(modelDto.groupsToNamesUnitsMap).reduce(
       (validationResponseDto: ValidationResponseDto, groupName: string) => {
         const response = this.validateParamsGroup(groupName, requestDto, modelDto);
